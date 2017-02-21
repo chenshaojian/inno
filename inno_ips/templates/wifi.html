@@ -1,0 +1,117 @@
+{%extends 'base.html'%}
+{%block main%}
+    <div class='bs-docs-masthead'>
+        <p>
+        准确度: <span id="p"></span><br />
+        店名: <span id="shop_id"></span><br />
+        </p>
+                <form name='form1'>
+            
+
+            <p class='lead'>
+                <div class="element-input">
+                    <label class="title">用于测试的手机的mac地址<span class="required" aria-required="true">*</span></label>
+                    <input class="large" type="text" name="mac" required="required" aria-required="true" id='txt_mac'>
+                </div>
+            </p>
+
+
+            <p class='lead'>
+                <div class="element-input">
+                    <label class="title">用于测试的手机的商店id<span class="required" aria-required="true">*</span></label>
+                    <input class="large" type="text" name="store" required="required" aria-required="true" id='txt_store'>
+                </div>
+            </p>
+
+            <p class='lead'>
+                <div class="element-input">
+                    <label class="title">测试开始时间<span class="required" aria-required="true">*</span></label>
+                    <input class="large" type="datetime-local" name="stime" required="required" aria-required="true" id='txt_stime'>
+                </div>
+            </p>
+
+            <p class='lead'>
+                <div class="element-input">
+                    <label class="title">测试结束时间<span class="required" aria-required="true">*</span></label>
+                    <input class="large" type="datetime-local" name="etime" required="required" aria-required="true" id='txt_etime'>
+                </div>
+            </p>
+
+
+            <p class='lead'>
+                <div class="element-input">
+                    <label class="title">你所在的区域<span class="required" aria-required="true">*</span></label>
+                    <select name='area' id="sel_area">
+                        <option value='1'>店外</option>
+                        <option value='0'>店内</option>
+                    </select>
+                </div>
+
+            </p>
+            <!--action-->
+            <button type="button" class="btn btn-primary btn-lg btn-block" onclick='train();' id='go'>
+                开始
+            </button>
+    </form>
+    </div>
+    
+
+
+    <div class='status'>
+        精度<span id='progress_ratio'></span>
+            <div class="progress">
+                 <div class="progress-bar" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width:0%;" id='progress'>
+                     <span class="sr-only">60% Complete</span>
+                 </div>
+             </div> 
+    </div>
+
+
+<script>
+
+function train(){
+    var botton = $("#go");
+
+    mac = $("#txt_mac").val();
+    mac = mac.replace(/:/g,"");
+    mac = mac.toLowerCase();
+    var regex = /^([a-f0-9]{12})+$/;
+    var area = $("#sel_area").val();
+    var store = $("#txt_store").val();
+    if(regex.test(mac)){
+        $(botton).text('请保持手机在wifi扫描界面');
+        //$(botton).attr("disabled","disabled");
+        getProgress();
+    }
+    else{
+        alert("请输入正确的mac地址");
+        $("#txt_mac").focus();
+    }
+}
+
+
+function getProgress(){
+    var mac = $("#txt_mac").val();
+    //var area = $("#sel_area").val();
+    var area = $("#sel_area").val();
+    var store = $("#txt_store").val();
+    var stime=$("#txt_stime").val();
+    var etime=$("#txt_etime").val();
+
+    $.get('/training_result/?mac='+mac+'&store_id='+store+'&area='+area+'&stime='+stime+'&etime='+etime,
+          function(data){
+                var data = eval("("+data+")")
+                document.getElementById("p").innerHTML=data.p+'%';
+                document.getElementById("shop_id").innerHTML=store;
+                console.log(data);
+                var ratio = data.p;
+                $("#progress_ratio").text(ratio.toString()+'%');
+                $("#progress").attr("style","width:"+ratio+'%;');
+                
+                $("#go").removeAttr('disabled');
+                $("#go").text("开始");
+            }
+    );
+}
+</script>
+{%endblock%}
